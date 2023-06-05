@@ -2,6 +2,7 @@ import sys
 import os
 
 indicador = 0
+err = 0
 
 #######################################
 #####                             #####
@@ -11,20 +12,25 @@ indicador = 0
 
 #Errores
 def error():
-    print("\nError en la linea " + str(globalLin[indicador]))
-    print("No se esperaba el token " + globalTokens[indicador] + '\n')
-    sys.exit(1)
-
+    global err
+    if err == 0:
+        print("Error en la posición " + str(indicador + 1) + ". No se esperaba el token " + globalTokens[indicador])
+        err = 1
+    
 
 #Ejecución del analizado sintáctico
 def program():
-    global indicador
-    #declaration()
-    if globalTokens[indicador] == 'EOF':
-        print("La cadena fue valida")
-    else:
-        print("Error de la cadena")
- #Expresiones
+    global indicador, err
+    indicador = 0
+    if Q():
+        if globalTokens[indicador] == 'EOF':
+            print("La cadena fue valida")
+        else: error()
+    else: error()
+    err = 0
+
+    
+#Gramatica
 def Q():
     global indicador
     if globalTokens[indicador] == 'SELECT':
@@ -126,8 +132,7 @@ def T3():
     global indicador
     if globalTokens [indicador] == 'ID':
         indicador +=1
-    else: return False
-
+    else: return True
 
 
 
@@ -469,10 +474,11 @@ def remove(cadena):
 def lexico(cadena):
     cad = remove(cadena)
     global globalLex, globalLin
+    globalLex, globalLin = None, None
     globalLex, globalLin = separador(cad)
     global globalTokens 
+    globalTokens = None
     globalTokens = PalRe(globalLex)
-
     program()
 
 
@@ -483,16 +489,15 @@ def lexico(cadena):
 #####            #####
 ######################
 
-#Comprueba si no se ejecuto bien
+#Comprueba si se ejecuto bien
 if len(sys.argv) == 1:
-    cadena =[]
-    print("Para terminar esciba 'ok'")
+    print("Para terminar esciba 'exit'")
     while True:
         escrito = input('>>')
-        if escrito != 'ok':
-            cadena += escrito + '\n'
+        if escrito != 'exit':
+            lexico(escrito)
         else: break
-    lexico(cadena)
+    
 #Manda error si no se cumple lo anterior    
 else:
     print("Error de ejecución")
