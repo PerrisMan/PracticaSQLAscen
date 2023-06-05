@@ -24,6 +24,110 @@ def program():
         print("La cadena fue valida")
     else:
         print("Error de la cadena")
+ #Expresiones
+def Q():
+    global indicador
+    if globalTokens[indicador] == 'SELECT':
+        indicador += 1
+        if D():
+            if globalTokens[indicador] =='FROM':
+                indicador += 1
+                if T():
+                    return True
+                else: error()
+            else:error()           
+        else: error()
+    else: return False
+
+def D():
+    global indicador
+    if globalTokens[indicador] == 'DISTINCT':
+        indicador += 1
+        if P():
+            return True
+        else: error()
+    elif P():
+        return True
+    else: return False
+
+def P():
+    
+    global indicador
+    if globalTokens[indicador] =='*':
+        indicador +=1
+        return True
+    elif A():
+        return True
+    else: return False
+
+def A():
+    global indicador
+    if A2():
+        if A1():
+            return True
+        else: error()
+    else: return False
+
+def A1():
+    global indicador
+    if globalTokens[indicador]==',':
+        indicador +=1
+        if A():
+            return True
+        else: error()
+    else: return True
+
+def A2():
+    global indicador
+    if globalTokens[indicador] == 'ID':
+        indicador += 1
+        if A3():
+            return True
+        else: error()
+    else: return False
+    
+def A3():
+    global indicador
+    if globalTokens[indicador] == '.':
+        indicador += 1
+        if globalTokens[indicador] == 'ID':
+            indicador += 1
+            return True
+        else: error()
+    else: return True
+
+def T():
+    global indicador
+    if T2():
+        if T1():
+            return True
+        else: error()
+    else: return False
+
+def T1():
+    global indicador
+    if globalTokens[indicador]==',':
+        indicador +=1
+        if T():
+            return True
+        else: error()
+    else: return True
+
+def T2():
+    global indicador
+    if globalTokens[indicador] == 'ID':
+        indicador += 1
+        if T3():
+            return True
+        else: error()
+    else: return False
+
+def T3():
+    global indicador
+    if globalTokens [indicador] == 'ID':
+        indicador +=1
+    else: return False
+
 
 
 
@@ -66,14 +170,9 @@ def compfloat(cadena):
     return False
 
 #Palabras reservadas
-#Palabras reservadas
 def reservadas(cadena):
-    palabrasHM = {'""', 'SELECT', 'Select', 'from', 'FROM', 'distinct', ',' ,'.', '*'}
-    if cadena in palabrasHM :
-        return palabrasHM[cadena]
-    else: 
-        return False
-  
+    palabrasHM = {'select':'SELECT', 'from':'FROM', 'distinct':'DISTINCT', ',':',' ,'.':'.', '*':'*', 
+                  'identificador':'ID'}
     if cadena in palabrasHM :
         return palabrasHM[cadena]
     else: 
