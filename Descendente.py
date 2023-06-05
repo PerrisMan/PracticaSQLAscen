@@ -1,4 +1,601 @@
-      #Quita comillas
+import sys
+import os
+
+indicador = 0
+
+#######################################
+#####                             #####
+#####    Analizador sintáctico    #####
+#####                             #####
+#######################################
+
+#Errores
+def error():
+    print("\nError en la linea " + str(globalLin[indicador]))
+    print("No se esperaba el token " + globalTokens[indicador] + '\n')
+    sys.exit(1)
+
+
+#Ejecución del analizado sintáctico
+def program():
+    global indicador
+    declaration()
+    if globalTokens[indicador] == 'EOF':
+        print("La cadena fue valida")
+    else:
+        print("Error de la cadena")
+
+#Declaraciones---------------------------------------------
+def declaration():
+    if class_decl():
+        declaration()
+    elif fun_decl():
+        declaration()
+    elif var_decl():
+        declaration()
+    elif statement():
+        declaration()
+    else: pass
+        
+def class_decl():
+    global indicador
+    if globalTokens[indicador] == 'CLASS':
+        indicador += 1
+        if globalTokens[indicador] == 'ID':
+            indicador += 1
+            if class_inher():
+                if globalTokens[indicador] == '{':
+                    indicador += 1
+                    if functions():
+                        if globalTokens[indicador] == '}':
+                            indicador += 1
+                            return True
+                        else: error()
+                    else: error()
+                else: error()
+            else: error()
+        else: error()
+    else: return False
+
+def class_inher():
+    global indicador
+    if globalTokens[indicador] == '<':
+        indicador += 1
+        if globalTokens[indicador] == 'ID':
+            indicador += 1
+            return True
+        else: error()
+    else: return True
+
+def fun_decl():
+    global indicador
+    if globalTokens[indicador] == 'FUN':
+        indicador += 1
+        if funct(): return True
+    else: return False
+
+def var_decl():
+    global indicador
+    if globalTokens[indicador] == 'VAR':
+        indicador += 1
+        if globalTokens[indicador] == 'ID':
+            indicador += 1
+            if var_init():
+                if globalTokens[indicador] == ';':
+                    indicador += 1
+                    return True
+                else: error()
+            else: error()
+        else: error()
+    else: return False
+
+def var_init():
+    global indicador
+    if globalTokens[indicador] == '=':
+        indicador += 1
+        if expression():
+            return True
+    else: return True
+
+#Sentencias------------------------------------------------
+def statement():
+    global indicador
+    if expr_stmt():
+        return True
+    elif for_stmt():
+        return True
+    elif if_stmt():
+        return True
+    elif print_stmt():
+        return True
+    elif return_stmt():
+        return True
+    elif while_stmt():
+        return True
+    elif block():
+        return True
+    else: return False
+
+def expr_stmt():
+    global indicador
+    if expression():
+        if globalTokens[indicador] == ';':
+            indicador += 1
+            return True
+        else: error()
+    else: return False
+
+def for_stmt():
+    global indicador
+    if globalTokens[indicador] == 'FOR':
+        indicador += 1
+        if globalTokens[indicador] == '(':
+            indicador += 1
+            if for_stmt_1():
+                if for_stmt_2():
+                    if for_stmt_3():
+                        if globalTokens[indicador] == ')':
+                            indicador += 1
+                            if statement():
+                                return True
+                            else: error()
+                        else: error()
+                    else: error()
+                else: error()
+            else: error()
+        else: error()
+    else: return False
+
+def for_stmt_1():
+    global indicador
+    if var_decl():
+        return True
+    elif expr_stmt():
+        return True
+    elif globalTokens[indicador] == ';':
+        indicador += 1
+        return True
+    else: return False
+
+def for_stmt_2():
+    global indicador
+    if expression():
+        if globalTokens[indicador] == ';':
+            indicador += 1
+            return True
+        else: error()
+    elif globalTokens[indicador] == ';':
+        indicador += 1
+        return True
+    else: return False
+
+def for_stmt_3():
+    global indicador
+    if expression():
+        return True
+    else: return True
+
+def if_stmt():
+    global indicador
+    if globalTokens[indicador] == 'IF':
+        indicador += 1
+        if globalTokens[indicador] == '(':
+            indicador += 1
+            if expression():
+                if globalTokens[indicador] == ')':
+                    indicador += 1
+                    if statement():
+                        if else_statement():
+                            return True
+                        else: error()
+                    else: error()
+                else: error()
+            else: error()
+        else: error()
+    else: return False
+
+def else_statement():
+    global indicador
+    if globalTokens[indicador] == 'ELSE':
+        indicador += 1
+        if statement():
+            return True
+        else: error()
+    else: return True
+
+def print_stmt():
+    global indicador
+    if globalTokens[indicador] == 'PRINT':
+        indicador += 1
+        if expression():
+            if globalTokens[indicador] == ';':
+                indicador += 1
+                return True
+            else: error()
+        else: error()
+    else: return False
+
+def return_stmt():
+    global indicador
+    if globalTokens[indicador] == 'RETURN':
+        indicador += 1
+        if return_exp_opc():
+            if globalTokens[indicador] == ';':
+                indicador += 1
+                return True
+            else: error()
+        else: error()
+    else: return False
+
+def return_exp_opc():
+    global indicador
+    if expression():
+        return True
+    else: return True
+
+def while_stmt():
+    global indicador
+    if globalTokens[indicador] == 'WHILE':
+        indicador += 1
+        if globalTokens[indicador] == '(':
+            indicador += 1
+            if expression():
+                if globalTokens[indicador] == ')':
+                    indicador += 1
+                    if statement():
+                        return True
+                    else: error()
+                else: error()
+            else: error()
+        else: error()   
+    else: return False
+
+def block():
+    global indicador
+    if globalTokens[indicador] == '{':
+        indicador += 1
+        if block_decl():
+            if globalTokens[indicador] == '}':
+                indicador += 1
+                return True
+            else: error()
+        else: error()
+    else: return False
+
+def block_decl():
+    global indicador
+    if declaration():
+        if block_decl():
+            return True
+        else: error()
+    else: return True
+
+#Expresiones----------------------------------------------
+def expression():
+    global indicador
+    if assignment(): return True
+    else: return False
+
+def assignment():
+    global indicador
+    if logic_or():
+        if assignment_opc(): return True
+        else: error()
+    else: return False
+
+def assignment_opc():
+    global indicador
+    if globalTokens[indicador] == '=':
+        indicador += 1
+        if expression(): return True
+        else: error()
+    else: return True
+
+def logic_or():
+    global indicador
+    if logic_and():
+        if logic_or_2(): return True
+        else: error()
+    else: return False
+
+def logic_or_2():
+    global indicador
+    if globalTokens[indicador] == 'OR':
+        indicador += 1
+        if logic_and():
+            if logic_or_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+def logic_and():
+    global indicador
+    if equality():
+        if logic_and_2(): return True
+        else: error()
+    else: return False
+
+def logic_and_2():
+    global indicador
+    if globalTokens[indicador] == 'AND':
+        indicador += 1
+        if equality():
+            if logic_and_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+def equality():
+    global indicador
+    if comparison():
+        if equality_2(): return True
+        else: error()
+    else: return False
+
+def equality_2():
+    global indicador
+    if globalTokens[indicador] == '!=':
+        indicador += 1
+        if comparison():
+            if equality_2(): return True
+            else: error()
+        else: error()
+    elif globalTokens[indicador] == '==':
+        indicador += 1
+        if comparison():
+            if equality_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+def comparison():
+    global indicador
+    if term():
+        if comparison_2(): return True
+        else: error()
+    else: return False
+
+def comparison_2():
+    global indicador
+    if globalTokens[indicador] == '>':
+        indicador += 1
+        if term():
+            if comparison_2(): return True
+            else: error()
+        else: error()
+    elif globalTokens[indicador] == '>=':
+        indicador += 1
+        if term():
+            if comparison_2(): return True
+            else: error()
+        else: error()
+    elif globalTokens[indicador] == '<':
+        indicador += 1
+        if term():
+            if comparison_2(): return True
+            else: error()
+        else: error()
+    elif globalTokens[indicador] == '<=':
+        indicador += 1
+        if term():
+            if comparison_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+def term():
+    global indicador
+    if factor():
+        if term_2(): return True
+        else: error()
+    else: return False
+
+def term_2():
+    global indicador
+    if globalTokens[indicador] == '-':
+        indicador += 1
+        if factor():
+            if term_2(): return True
+            else: error()
+        else: error()
+    elif globalTokens[indicador] == '+':
+        indicador += 1
+        if factor():
+            if term_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+def factor():
+    global indicador
+    if unary():
+        if factor_2(): return True
+        else: error()
+    else: return False
+
+def factor_2():
+    global indicador
+    if globalTokens[indicador] == '/':
+        indicador += 1
+        if unary():
+            if factor_2(): return True
+            else: error()
+        else: error()
+    elif globalTokens[indicador] == '*':
+        indicador += 1
+        if unary():
+            if factor_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+def unary():
+    global indicador
+    if globalTokens[indicador] == '!':
+        indicador += 1
+        if unary(): return True
+        else: error()
+    elif globalTokens[indicador] == '-':
+        indicador += 1
+        if unary(): return True
+        else: error()
+    elif call(): return True
+    else: return False
+
+def call():
+    global indicador
+    if primary():
+        if call_2(): return True
+        else: error()
+    else: return False
+
+def call_2():
+    global indicador
+    if globalTokens[indicador] == '(':
+        indicador += 1
+        if arguments_opc():
+            if globalTokens[indicador] == ')':
+                indicador += 1
+                if call_2(): return True
+                else: error()
+            else: error()
+        else: error()
+    elif globalTokens[indicador] == '.':
+        indicador += 1
+        if globalTokens[indicador] == 'ID':
+            indicador += 1
+            if call_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+def call_opc():
+    global indicador
+    
+def primary():
+    global indicador
+    if globalTokens[indicador] == 'TRUE':
+        indicador += 1
+        return True
+    elif globalTokens[indicador] == 'FALSE':
+        indicador += 1
+        return True
+    elif globalTokens[indicador] == 'NULL':
+        indicador += 1
+        return True
+    elif globalTokens[indicador] == 'THIS':
+        indicador += 1
+        return True
+    elif globalTokens[indicador] == 'INT':
+        indicador += 1
+        return True
+    elif globalTokens[indicador] == 'FLOAT':
+        indicador += 1
+        return True
+    elif globalTokens[indicador] == 'STRING':
+        indicador += 1
+        return True
+    elif globalTokens[indicador] == 'ID':
+        indicador += 1
+        return True
+    elif globalTokens[indicador] == '(':
+        indicador += 1
+        if expression():
+            if globalTokens[indicador] == ')':
+                indicador += 1
+                return True
+            else: error()
+        else: error()
+    elif globalTokens[indicador] == 'SUPER':
+        indicador += 1
+        if globalTokens[indicador] == '.':
+            indicador += 1
+            if globalTokens[indicador] == 'ID':
+                indicador += 1
+                return True
+            else: error()
+        else: error()
+    else: return False
+
+#Otras----------------------------------------------------
+def funct():
+    global indicador
+    if globalTokens[indicador] == 'ID':
+        indicador += 1
+        if globalTokens[indicador] == '(':
+            indicador += 1
+            if parameters_opc():
+                if globalTokens[indicador] == ')':
+                    indicador += 1
+                    if block(): return True
+                    else: error()
+                else: error()
+            else: error()
+        else: error()
+    else: return False
+
+def functions():
+    global indicador
+    if funct():
+        if functions(): return True
+        else: error()
+    else: return True
+
+def parameters_opc():
+    global indicador
+    if parameters(): return True
+    else: return True
+
+def parameters():
+    global indicador
+    if globalTokens[indicador] == 'ID':
+        indicador += 1
+        if parameters_2(): return True
+        else: error()
+    else: False
+
+def parameters_2():
+    global indicador
+    if globalTokens[indicador] == ',':
+        indicador += 1
+        if globalTokens[indicador] == 'ID':
+            indicador += 1
+            if parameters_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+def arguments_opc():
+    global indicador
+    if arguments(): return True
+    else: return True
+
+def arguments():
+    global indicador
+    if expression():
+        if arguments_2(): return True
+        else: error()
+    else: False
+
+def arguments_2():
+    global indicador
+    if globalTokens[indicador] == ',':
+        indicador += 1
+        if expression():
+            if arguments_2(): return True
+            else: error()
+        else: error()
+    else: return True
+
+
+
+###################################
+#####                         #####
+#####    Analizador léxico    #####
+#####                         #####
+###################################
+
+#Quita comillas
 def convCadena(cadena):
         newPala = []
         for c in cadena:
@@ -32,7 +629,15 @@ def compfloat(cadena):
 
 #Palabras reservadas
 def reservadas(cadena):
-    palabrasHM = {'""', 'SELECT', 'Select', 'from', 'FROM', 'distinct', ',' ,'.', '*'}
+    palabrasHM = {'for':'FOR', 'fun':'FUN', 'false':'FALSE', 'if':'IF', 'print':'PRINT', 'return':'RETURN', 
+                'true':'TRUE', 'var':'VAR', 'else':'ELSE', 'or':'OR', 'null':'NULL', 'try':'TRY',
+                'not':'NOT', 'break':'BREAK', 'and':'AND', 'identificador':'ID', 'float':'FLOAT',
+                'int':'INT', 'string':'STRING', '=':'=', 'while':'WHILE',
+                '+':'+', '-':'-', '/':'/', '*':'*', '+=':'+=',
+                '<=':'<=', '>=':'>=', '==':'==', '!=':'!=', '<':'<', '>':'>',
+                '-=':'-=', '{':'{', '}':'}', '[':'[', ']':']',
+                '(':'(', ')':')', ';':';', '.':'.', ',':',',
+                'class':'CLASS', 'this':'THIS', 'super':'SUPER'}
     if cadena in palabrasHM :
         return palabrasHM[cadena]
     else: 
