@@ -66,16 +66,14 @@ def compfloat(cadena):
     return False
 
 #Palabras reservadas
+#Palabras reservadas
 def reservadas(cadena):
-    palabrasHM = {'for':'FOR', 'fun':'FUN', 'false':'FALSE', 'if':'IF', 'print':'PRINT', 'return':'RETURN', 
-                'true':'TRUE', 'var':'VAR', 'else':'ELSE', 'or':'OR', 'null':'NULL', 'try':'TRY',
-                'not':'NOT', 'break':'BREAK', 'and':'AND', 'identificador':'ID', 'float':'FLOAT',
-                'int':'INT', 'string':'STRING', '=':'=', 'while':'WHILE',
-                '+':'+', '-':'-', '/':'/', '*':'*', '+=':'+=',
-                '<=':'<=', '>=':'>=', '==':'==', '!=':'!=', '<':'<', '>':'>',
-                '-=':'-=', '{':'{', '}':'}', '[':'[', ']':']',
-                '(':'(', ')':')', ';':';', '.':'.', ',':',',
-                'class':'CLASS', 'this':'THIS', 'super':'SUPER'}
+    palabrasHM = {'""', 'SELECT', 'Select', 'from', 'FROM', 'distinct', ',' ,'.', '*'}
+    if cadena in palabrasHM :
+        return palabrasHM[cadena]
+    else: 
+        return False
+  
     if cadena in palabrasHM :
         return palabrasHM[cadena]
     else: 
